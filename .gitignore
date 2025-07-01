@@ -1,4 +1,4 @@
 .env
-credentials.json
+credential.json
 policies/
 .venv/
