@@ -1,0 +1,133 @@
+This document is the Third-Party Risk Management Guideline (Pedoman Manajemen Risiko Pihak Ketiga), number 001/P/PRC/07/2023, which became effective upon its approval in August 2023. It outlines the Bank's framework, principles, and minimum requirements for managing risks arising from collaborations with all third-party suppliers, detailing the Third-Party Risk Assessment (TPRA) process.
+
+THIRD-PARTY RISK MANAGEMENT GUIDELINES
+Document Number: 001/P/PRC/07/2023, Version: 1.0
+
+This document is the Third-Party Risk Management Guideline from the Finance - Procurement work unit, effective July 14, 2023. All information contained in this document is sensitive and for internal use only at PT Super Bank Indonesia. Reproduction in whole or in part without written permission from PT Super Bank Indonesia is prohibited.
+
+APPROVALS
+The guideline was proposed by Deasi Arindani (Procurement) and Tommy Pinontoan (Head of Procurement) on August 10, 2023.
+It was reviewed by:
+
+Legal: Astrid Carolin (10/08/2023)
+Compliance: Felisia Sugiarso (10/08/2023)
+Enterprise Risk: Eunice Kurniawan (22/8/2023)
+Tax: Wenny Yunita (16/08/2023)
+Human Resource: Ilvia Aritonang (15/08/23)
+Operation: Irving Luntungan (15/08/23)
+Anti Money Laundry (AML): Mery Ambarukmi (10/08/23)
+Infosec: David Sitorus (15/8/23)
+Marketing: Cut Frinzy Emillie (10/8/23)
+Corporate Secretary: Murni Nurdini (10/8/23)
+Data Protection: Aimee Malik (15/8/2023)
+It was approved by Melisa Hendrawati (Finance Director) on 22/8/23 and Amalia Pratantara (Compliance Director).
+
+I. INTRODUCTION
+
+1.1. BACKGROUND
+The Bank is required to implement effective risk management in the procurement of goods and services, appropriate to the scale, characteristics, and complexity of the business. Procurement is responsible for ensuring that effective governance and control procedures are in place to identify third parties (Suppliers) and mitigate their associated risks. This Third-Party Risk Management Framework, Strategy, and Policy outlines the guiding principles and minimum requirements for managing risks arising from cooperation with third parties (Suppliers) and outsourcing arrangements.
+
+1.2. PURPOSE
+The objectives of this guideline are to:
+
+Provide core principles to ensure strong governance and effective third-party risk management for the Bank.
+Articulate the Bank's approach to securing services from third parties that align with its business strategy and meet regulatory requirements.
+Provide a governance structure and approach for managing outsourcing risks in accordance with regulations.
+Establish an efficient and clear third-party risk assessment due diligence process, including guidance for requestors/business owners on completing the questionnaire.
+Ensure minimum mitigation controls are in place before contract award and/or signing.
+Conduct proper analysis and assessment of Suppliers to ensure they have good financial performance and reputation, sufficient human resources, and adequate facilities. For IT suppliers, reference should be made to the applicable IT Guidelines.
+Ensure adequate reporting to monitor the performance of IT service providers.
+Ensure the Financial Services Authority (OJK) can access the database at any time for both current and historical data.
+1.3. SCOPE
+A third-party relationship is defined as a contractual arrangement for the acquisition of goods or services from a Supplier. The scope of third-party risk management covers:
+
+Outsourcing arrangements.
+Non-Outsourcing arrangements with a contract value greater than Rp 100,000,000.
+Products or services that require access to the Bank's systems.
+Products or services that process the Bank's data.
+Exclusions from this risk assessment include: legal panel firms, appraisers, notaries, and others regulated in the procurement policy. All third-party arrangements must comply with this Guideline.
+1.4. TARGET WORK UNIT
+The risk assessment process is initiated by the Requestor/Business Owner, with review and assessment by the Procurement team and relevant Subject Matter Experts (SMEs). They advise the Requestor on the results and necessary improvements before the Requestor can proceed with contract award or signing.
+
+1.5. EFFECTIVE DATE
+This guideline is effective from the date of its approval.
+
+II. BASIS OF REFERENCE
+This policy refers to internal policies (Procurement, Code of Conduct, AML, Conflict of Interest, Information Security, IT Development and Procurement, IT Service Provider Usage, BCM) and external regulations, including POJK 11/2022 on IT Implementation, POJK 9/2016 on Outsourcing, POJK 8/2023 on AML/CFT, SEOJK 21/2017 on IT Risk Management, SEOJK 11/2017 on Outsourcing Prudence, and OJK Letter S-25/PB.32/2023 on AML/CFT Compliance for Supporting Professions.
+
+III. RISK ASSESSMENT CATEGORIES
+The Bank assesses several types of risks:
+
+Financial Risk: For contracts over Rp 100,000,000, the Procurement & Finance Team assesses the supplier's financial stability. This is not required for contracts at or below this value or for suppliers assessed in the last 12 months.
+Human Resources Risk: The HR Team ensures the supplier has sufficient and competent human resources and complies with employment regulations.
+Legal & Tax Risk: The Legal & Tax Team assesses compliance with laws and regulations, the adequacy of the supplier's internal controls, and ensures contracts contain protective clauses.
+Operational Risk: The Operational Risk Team assesses the supplier's operational capability, infrastructure, and service delivery effectiveness. This includes Business Continuity Management (BCM), where the business unit must establish BCPs and exit strategies for substantial risks.
+Anti-Money Laundering and Counter-Terrorism Financing (AML/CFT) Risk: The AML Team conducts due diligence to ensure suppliers are not used for illicit activities. For professions like advocates, notaries, and accountants, the Bank must verify their OJK registration.
+Vendor Security Assessment (VSA): The Information Security Team assesses risks related to information/cyber security, data security, and data privacy for suppliers that collect, process, access, or store the Bank's confidential data.
+Reputational Risk: The Marketing & Corporate Secretary Team assesses the potential impact on the Bank's reputation resulting from a supplier's failure or breach.
+Outsourcing Risk: The Requestor, Procurement, and all relevant SMEs conduct a strict assessment to ensure the outsourcing provider is an Indonesian legal entity and has the required permits.
+Confidentiality/Data Security Risk: The Data Privacy Officer (DPO) assesses risks for suppliers handling personal data. In the event of a breach of bank secrecy or personal data, the Bank must report to OJK within 3 working days and decide on further actions, including service termination.
+IV. DEFINITIONS
+
+Requestor/Business Owner: The party/work unit that identifies a business/operational need and initiates a procurement request.
+Third Party (Supplier): An individual, agent, entity, or company that enters into a business relationship with the Bank based on a contract.
+Subject Matter Expert (SME): Relevant experts who identify, assess, mitigate, and monitor potential risks.
+Vendor Management Committee: A committee that regularly convenes to determine supplier selection results and discuss other supplier management items.
+Outsourcing (Alih Daya): The delegation of partial work implementation to a service provider company through a contracting agreement and/or labor supply agreement.
+V. STRATEGY
+The Bank's third-party strategy ensures that engagements are aligned with the Bank's business strategy, are governed by strong and effective risk management, and comply with applicable regulations.
+
+VI. ROLES AND RESPONSIBILITIES
+
+Board of Directors: Responsible for ensuring good governance and operational risk management, particularly for outsourcing.
+Vendor Management Committee: Approves supplier appointments (for contracts > Rp 3.5 billion), reviews high and medium risk assessments, reviews the outsourcing framework, and approves reports to the regulator.
+Procurement: Governs and implements procurement policies, evaluates requests, ensures negotiation and contract processes comply with policies, and monitors medium & high residual risk vendors.
+Requestor/Business Owner (BO): Works with SMEs to complete risk assessments, manages the supplier relationship and performance, and prepares the business case.
+Compliance Team: Provides regulatory support for all third-party collaborations.
+Operational Risk Team: Provides the framework to ensure effective controls.
+Legal Team: Provides legal advice on contract drafting to protect the Bank's interests.
+Information Security Team: Conducts the Vendor Security Assessment (VSA).
+Data Privacy Officer (DPO): Provides advice on necessary data protection measures.
+
+
+VII. THIRD-PARTY COOPERATION PROCESS
+The process consists of three main stages:
+A. Initiation Stage: Includes planning & procurement, creating a business case, selecting a provider, determining outsourcing status, due diligence (evaluating the third party, completing risk questionnaires), contracting (negotiation, finalization), and onboarding.
+B. Monitoring Stage: Involves regular performance assessment and issue management (escalation and resolution).
+C. Renewal/Termination Stage: Involves renewing or ending the contract and cooperation.
+
+
+VIII. INSTRUCTIONS FOR THIRD-PARTY RISK ASSESSMENT
+
+Step 1: The Requestor/Business Owner (BO) completes the outsourcing classification form.
+Step 2: The BO completes the Third-Party Risk Assessment (TPRA) questionnaire before contract finalization. The questionnaire covers general information and risk assessment criteria from various SMEs.
+Step 4 (Risk Evaluation): Procurement ensures the questionnaire is complete. For low inherent risk, the Head/BO provides approval. For medium and high inherent risk, the requestor must escalate to the relevant SME for mitigation planning.
+Step 5 (Approval): For low residual risk, the Head/BO provides approval. For medium and high residual risk, approval is required from the Vendor Management Committee.
+IX. ADDITIONAL ASSESSMENT CRITERIA
+Additional assessments may be conducted if needed, such as on-site visits to the third party or using results from an independent market review.
+
+X. USE OF SUBCONTRACTORS (FOR OUTSOURCING)
+Any use of subcontractors by a third party must be known and approved by the Bank beforehand. An assessment must be done to ensure the arrangement does not harm the Bank.
+
+XI. CONTRACTS
+All contracts must be reviewed by the Legal team before execution. A formal agreement must be finalized after the relevant risk assessments are completed and before any activity begins.
+
+XII. MONITORING AND CONTROL
+Each Requestor is responsible for monitoring the performance of all third parties against SLAs and agreed standards. The review periods are:
+
+Outsourcing Vendors: Annually (for all residual risk levels).
+Non-Outsourcing Vendors: Annually for High Residual Risk, every two years for Medium Residual Risk, and every three years for Low Residual Risk. Performance is rated as Bad (not recommended for renewal), Good, or Excellent (both recommended for renewal).
+XIII. SUPPLIER RELATIONSHIP MANAGEMENT
+The Requestor manages the supplier relationship in close cooperation with Procurement. Escalation triggers include deteriorating service performance, inadequate solvency of the provider, breaches of regulations regarding bank secrecy and personal data, or conditions that hinder effective supervision by OJK. In case of a data breach, the Bank must report to OJK within 3 working days, decide on follow-up actions, and report again if the service is terminated prematurely.
+
+XIV. RECORD-KEEPING AND RETENTION
+Records for each procurement arrangement must be kept for ten years from the end of the agreement term. This includes the business case, risk assessments, original contract, NDA, and periodic reassessments.
+
+XV. DEVIATION
+Any deviation from these provisions must be approved by the C-Level of the respective Requestor or the Vendor Management Committee.
+
+XVI. CLOSING
+This guideline was created as a form of the Bank's commitment and compliance with applicable laws and the principles of Good Corporate Governance.
+
+COMPLIANCE MEMO SUMMARY
+A compliance review (No.009/IM-KEP/SBI/VIII/2023) dated August 22, 2023, concluded that the draft Third-Party Risk Management Guideline could be implemented. The review confirmed that the guideline and its worksheets align with regulatory requirements, including those from POJK and SEOJK regarding outsourcing. It verified that the guideline mandates due diligence, documentation of assessments, and periodic monitoring of suppliers. The memo also noted that for high-risk findings, the proposed process is to conduct further risk analysis to determine mitigations, and it recommended that if a high residual risk remains, the supplier should not be used. The memo also confirmed the guideline covers CDD principles for AML/CFT and requirements for using subcontractors.
