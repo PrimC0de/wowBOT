@@ -9,8 +9,8 @@ OPENAI_MODEL = "gpt-4o-mini"
 EMBEDDING_MODEL = "text-embedding-3-small"
 
 # Retrieval Configuration
-TOP_K = 7
-TOP_N_RERANK = 4
+TOP_K = 12
+TOP_N_RERANK = 3
 
 # File Paths
 FAISS_INDEXES = {

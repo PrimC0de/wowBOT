@@ -2,3 +2,5 @@
 credential.json
 policies/
 .venv/
+__pycache__/
+*.pyc

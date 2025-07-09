@@ -88,6 +88,15 @@ python generate_embeddings.py
 
 ---
 
+## 💬 Slack Integration & Conversation Context
+
+- The bot is designed for Slack and **replies in the same thread** as the user's message.
+- **Thread-aware context:** The bot keeps track of the conversation history within each Slack thread, making follow-up questions more relevant and contextual.
+- **Context window:** By default, only the last 6 messages (user and bot) in a thread are used as context for each answer. You can adjust this in `main.py` by changing the `max_turns` parameter in `add_to_thread_history`.
+- **Context is thread-local:** The bot does NOT share context or memory between different threads for privacy and clarity.
+
+---
+
 ## 🔑 Credentials & Security
 
 - Place `credentials.json` (Google service account) in the project root.
@@ -127,6 +136,23 @@ python generate_embeddings.py
 - **Never commit credentials.json or other secrets.**
 - **Regenerate chunks and indexes whenever your knowledge base changes.**
 - **Monitor logs for errors and incomplete answers.**
+- **For internal adoption:**
+  - Document any company-specific configuration or deployment steps in an internal wiki.
+  - Tag a stable release and keep a CHANGELOG.md for major updates.
+  - Add an AUTHORS or CONTRIBUTORS file to recognize maintainers.
+
+---
+
+## 👥 Handover & Maintainership
+
+- **Onboarding:**
+  - New maintainers should read this README and review `config.py` for all settings.
+  - See code comments and docstrings for function-level documentation.
+- **Knowledge transfer:**
+  - Consider a live walkthrough or Q&A session for new teams.
+- **Legacy:**
+  - Original author: Prima Samosir
+  - For questions, see project history or contact the last maintainer.
 
 ---
 
