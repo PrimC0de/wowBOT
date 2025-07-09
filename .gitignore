@@ -1,6 +1,7 @@
 .env
 credential.json
 policies/
+data/
 .venv/
 __pycache__/
 *.pyc

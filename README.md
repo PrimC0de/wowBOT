@@ -1,3 +1,8 @@
+## Author
+
+This chatbot system was originally developed by Prima Samosir.
+Created as part of Internal's AI Chatbot Project under Procurement Team.
+
 # Superbank Procurement Assistant
 
 A modern, layered chatbot architecture for Superbank Indonesia's procurement policies using OpenAI, FAISS, FastAPI, and Google Sheets integration.
