@@ -57,12 +57,12 @@ def load_chunks(chunk_file: str) -> List[str]:
         chunks = f.read().split("\n\n")
     return [chunk.strip() for chunk in chunks if chunk.strip()]
 
-def generate_embeddings_for_chunks(chunks: List[str], openai_service: OpenAIService) -> np.ndarray:
+async def generate_embeddings_for_chunks(chunks: List[str], openai_service: OpenAIService) -> np.ndarray:
     """Generate embeddings for a list of chunks using OpenAIService."""
     embeddings = []
     for i, chunk in enumerate(chunks):
         try:
-            emb = openai_service.get_embedding(chunk)
+            emb = await openai_service.get_embedding(chunk)
             embeddings.append(emb)
             if (i + 1) % 10 == 0 or i == len(chunks) - 1:
                 logger.info(f"Embedded {i + 1}/{len(chunks)} chunks...")
@@ -79,18 +79,18 @@ def save_faiss_index(embeddings: np.ndarray, index_path: str):
     faiss.write_index(index, index_path)
     logger.info(f"Saved FAISS index to {index_path} (dim={dim}, n={embeddings.shape[0]})")
 
-def process_document_type(doc_type: str, openai_service: OpenAIService):
+async def process_document_type(doc_type: str, openai_service: OpenAIService):
     """Process a single document type: load chunks, embed, and save FAISS index."""
     chunk_file = CHUNK_FILES[doc_type]
     index_path = FAISS_INDEXES[doc_type]
     logger.info(f"Processing document type: {doc_type}")
     chunks = load_chunks(chunk_file)
     logger.info(f"Loaded {len(chunks)} chunks from {chunk_file}")
-    embeddings = generate_embeddings_for_chunks(chunks, openai_service)
+    embeddings = await generate_embeddings_for_chunks(chunks, openai_service)
     save_faiss_index(embeddings, index_path)
     logger.info(f"Completed processing for {doc_type}\n")
 
-def main(doc_types: Optional[List[str]] = None, chunk: bool = False):
+async def main(doc_types: Optional[List[str]] = None, chunk: bool = False):
     """Main function to optionally chunk knowledge files and generate embeddings/FAISS indexes."""
     # Map of document type to knowledge .txt file
     if chunk:
@@ -101,7 +101,7 @@ def main(doc_types: Optional[List[str]] = None, chunk: bool = False):
         doc_types = list(CHUNK_FILES.keys())
     logger.info(f"Generating embeddings for document types: {doc_types}")
     for doc_type in doc_types:
-        process_document_type(doc_type, openai_service)
+        await process_document_type(doc_type, openai_service)
     logger.info("All embeddings and indexes generated successfully.")
 
 if __name__ == "__main__":
@@ -119,4 +119,5 @@ if __name__ == "__main__":
         help="Run the chunking step before embedding generation."
     )
     args = parser.parse_args()
-    main(args.doc_types, chunk=args.chunk)
+    import asyncio
+    asyncio.run(main(args.doc_types, chunk=args.chunk))

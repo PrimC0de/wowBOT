@@ -13,7 +13,7 @@ class ChatbotService:
         self.retrieval_service = RetrievalService()
         self.openai_service = OpenAIService()
     
-    def process_user_message(self, user_message: str) -> str:
+    async def process_user_message(self, user_message: str) -> str:
         """Process a user message and return a response."""
         try:
             # Extract the actual prompt from the Slack message
@@ -23,15 +23,15 @@ class ChatbotService:
                 return "Hi! Please ask me something after mentioning me."
             
             # Check if it's a vendor question (future feature)
-            vendor_info = self._check_vendor_question(prompt)
+            vendor_info = await self._check_vendor_question(prompt)
             if vendor_info:
                 return self._handle_vendor_question(vendor_info)
             
             # Process the query through retrieval pipeline
-            context_text = self.retrieval_service.process_query(prompt)
+            context_text = await self.retrieval_service.process_query(prompt)
             
             # Generate response using the context
-            response = self.openai_service.generate_response(context_text, prompt)
+            response = await self.openai_service.generate_response(context_text, prompt)
             
             logger.info(f"Generated response for prompt: {prompt[:100]}...")
             return response
@@ -53,10 +53,10 @@ class ChatbotService:
             logger.error(f"Error extracting prompt: {e}")
             return ""
     
-    def _check_vendor_question(self, prompt: str) -> Optional[Dict[str, str]]:
+    async def _check_vendor_question(self, prompt: str) -> Optional[Dict[str, str]]:
         """Check if the prompt is asking about a vendor."""
         try:
-            return self.openai_service.extract_vendor_info(prompt)
+            return await self.openai_service.extract_vendor_info(prompt)
         except Exception as e:
             logger.warning(f"Error checking vendor question: {e}")
             return None

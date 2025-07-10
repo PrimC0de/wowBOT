@@ -60,7 +60,7 @@ async def handle_mention(event, say, logger):
         contextual_query = get_thread_context(thread_ts)
 
         # Use contextual_query for retrieval
-        context = chatbot_service.retrieval_service.process_query(contextual_query)
+        context = await chatbot_service.retrieval_service.process_query(contextual_query)
 
         # Build LLM messages with thread history
         messages = [{"role": "system", "content": ASSISTANT_PROMPT}]
@@ -68,7 +68,7 @@ async def handle_mention(event, say, logger):
         messages.append({"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_message}"})
 
         # Generate answer using OpenAIService
-        answer = chatbot_service.openai_service.chat_completion(messages)
+        answer = await chatbot_service.openai_service.chat_completion(messages)
 
         # Add bot answer to thread history
         add_to_thread_history(thread_ts, "assistant", answer)
@@ -95,7 +95,7 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     try:
-        status = chatbot_service.get_system_status()
+        status = await chatbot_service.get_system_status()
         return {"status": "healthy", "details": status}
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -104,7 +104,7 @@ async def health_check():
 @app.get("/status")
 async def get_status():
     """Get detailed system status."""
-    return chatbot_service.get_system_status()
+    return await chatbot_service.get_system_status()
 
 if __name__ == "__main__":
     import asyncio

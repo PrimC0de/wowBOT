@@ -44,11 +44,11 @@ class RetrievalService:
         
         return self.faiss_indexes[doc_type], self.chunks[doc_type]
     
-    def retrieve_similar_chunks(self, query: str, doc_type: str = "sop", top_k: int = TOP_K) -> List[str]:
+    async def retrieve_similar_chunks(self, query: str, doc_type: str = "sop", top_k: int = TOP_K) -> List[str]:
         """Retrieve top K similar chunks for a query and document type."""
         try:
             # Get embedding for the query
-            query_embedding = self.openai_service.get_embedding(query)
+            query_embedding = await self.openai_service.get_embedding(query)
             query_embedding = query_embedding.reshape(1, -1)
             
             # Get the appropriate index and chunks
@@ -67,23 +67,23 @@ class RetrievalService:
             logger.error(f"Error in retrieve_similar_chunks: {e}")
             raise
     
-    def process_query(self, query: str) -> str:
+    async def process_query(self, query: str) -> str:
         """Process a query through the complete retrieval pipeline."""
         try:
             # Step 1: Translate to Indonesian if needed
-            translated_query = self.openai_service.translate_to_indonesian(query)
+            translated_query = await self.openai_service.translate_to_indonesian(query)
             logger.info(f"Original query: {query}")
             logger.info(f"Translated query: {translated_query}")
             
             # Step 2: Classify document type
-            doc_type = self.openai_service.classify_document_type(translated_query)
+            doc_type = await self.openai_service.classify_document_type(translated_query)
             logger.info(f"Classified document type: {doc_type}")
             
             # Step 3: Retrieve similar chunks
-            retrieved_chunks = self.retrieve_similar_chunks(translated_query, doc_type)
+            retrieved_chunks = await self.retrieve_similar_chunks(translated_query, doc_type)
             
             # Step 4: Rerank chunks and get top N
-            context_text = self.openai_service.rerank_chunks(
+            context_text = await self.openai_service.rerank_chunks(
                 translated_query, retrieved_chunks, TOP_N_RERANK
             )
             
