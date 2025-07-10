@@ -6,6 +6,12 @@ load_dotenv()
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = "gpt-4o-mini"
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+OPENROUTER_MODEL_OPENAI = "openai/gpt-4.1"
+OPENROUTER_MODEL_ANTHROPIC = "anthropic/claude-3-opus"
+
 EMBEDDING_MODEL = "text-embedding-3-small"
 
 # Retrieval Configuration

@@ -2,8 +2,9 @@
 
 import logging
 from fastapi import FastAPI, Request
+import os
 from slack_bolt.async_app import AsyncApp
-from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
+from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
 
 from config import HOST, PORT, ASSISTANT_PROMPT
 from services.chatbot_service import ChatbotService
@@ -18,13 +19,18 @@ logger = logging.getLogger(__name__)
 # Initialize services
 chatbot_service = ChatbotService()
 
-# Initialize Slack and FastAPI
-slack_app = AsyncApp()
-slack_handler = AsyncSlackRequestHandler(slack_app)
+# Load Slack tokens from environment
+SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
+SLACK_APP_TOKEN = os.environ["SLACK_APP_TOKEN"]
+
+# Initialize Slack app in Socket Mode
+slack_app = AsyncApp(token=SLACK_BOT_TOKEN)
+
+# Initialize FastAPI (for non-Slack endpoints)
 app = FastAPI(title="Superbank Procurement Assistant", version="1.0.0")
 
 # --- Thread-aware conversation history ---
-thread_histories = {}  # {thread_ts: [ {"role": "user"/"assistant", "content": ...}, ... ] }
+thread_histories = {} 
 
 # Helper to add a message to thread history
 def add_to_thread_history(thread_ts, role, content, max_turns=6):
@@ -39,11 +45,6 @@ def get_thread_context(thread_ts):
     # Optionally, only use user messages or alternate user/assistant turns
     context = " ".join([turn["content"] for turn in history])
     return context
-
-@app.post("/slack/events")
-async def slack_events(req: Request):
-    """Handle Slack events."""
-    return await slack_handler.handle(req)
 
 @slack_app.event("app_mention")
 async def handle_mention(event, say, logger):
@@ -106,6 +107,11 @@ async def get_status():
     return chatbot_service.get_system_status()
 
 if __name__ == "__main__":
-    import uvicorn
-    logger.info("Starting Superbank Procurement Assistant...")
-    uvicorn.run(app, host=HOST, port=PORT)
+    import asyncio
+
+    async def main():
+        logger.info("Starting Superbank Procurement Assistant in Socket Mode...")
+        handler = AsyncSocketModeHandler(slack_app, SLACK_APP_TOKEN)
+        await handler.start_async()
+
+    asyncio.run(main())

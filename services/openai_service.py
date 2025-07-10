@@ -6,6 +6,7 @@ import openai
 import numpy as np
 
 from config import (
+    OPENROUTER_API_KEY, OPENROUTER_MODEL_OPENAI, OPENROUTER_MODEL_ANTHROPIC,
     OPENAI_API_KEY, OPENAI_MODEL, EMBEDDING_MODEL,
     CLASSIFIER_PROMPT, TRANSLATOR_PROMPT, RERANK_PROMPT,
     VENDOR_EXTRACTOR_PROMPT, ASSISTANT_PROMPT
@@ -14,15 +15,21 @@ from config import (
 logger = logging.getLogger(__name__)
 
 class OpenAIService:
-    """Service class for all OpenAI API interactions."""
+    """Service class for all OpenRouter API interactions."""
     
     def __init__(self):
-        self.client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        self.openai_client = openai.OpenAI(
+            api_key=OPENAI_API_KEY
+        )
+        self.openrouter_client = openai.OpenAI(
+            api_key=OPENROUTER_API_KEY,
+            base_url="https://openrouter.ai/api/v1"
+        )
     
     def get_embedding(self, text: str) -> np.ndarray:
         """Get embedding for a text using OpenAI's embedding model."""
         try:
-            response = self.client.embeddings.create(
+            response = self.openai_client.embeddings.create(
                 model=EMBEDDING_MODEL,
                 input=text
             )
@@ -32,16 +39,16 @@ class OpenAIService:
             raise
     
     def chat_completion(self, messages: List[Dict[str, str]], temperature: float = 0) -> str:
-        """Make a chat completion request to OpenAI."""
+        """Make a chat completion request to OpenRouter."""
         try:
-            response = self.client.chat.completions.create(
-                model=OPENAI_MODEL,
+            response = self.openrouter_client.chat.completions.create(
+                model=OPENROUTER_MODEL_OPENAI,
                 temperature=temperature,
                 messages=messages
             )
             content = response.choices[0].message.content
             if content is None:
-                logger.warning("OpenAI returned None content")
+                logger.warning("OpenRouter returned None content")
                 return ""
             return content.strip()
         except Exception as e:
