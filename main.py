@@ -8,6 +8,7 @@ from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
 
 from config import HOST, PORT, ASSISTANT_PROMPT
 from services.chatbot_service import ChatbotService
+import asyncio
 
 # Configure logging
 logging.basicConfig(
@@ -52,6 +53,7 @@ async def handle_mention(event, say, logger):
     try:
         user_message = event["text"]
         thread_ts = event.get("thread_ts") or event["ts"]
+        user_id = event.get("user", None)
 
         # Add user message to thread history
         add_to_thread_history(thread_ts, "user", user_message)
@@ -73,12 +75,153 @@ async def handle_mention(event, say, logger):
         # Add bot answer to thread history
         add_to_thread_history(thread_ts, "assistant", answer)
 
-        await say(answer, thread_ts=thread_ts)
+        # Prepend user_id 
+        if user_id:
+            display_text = f"<@{user_id}>\n" + answer
+        else:
+            display_text = answer
+
+        # Send the answer with feedback buttons using Block Kit
+        await say(
+            text=display_text,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": display_text
+                    }
+                },
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "👍 Helpful"},
+                            "style": "primary",
+                            "value": "helpful",
+                            "action_id": "feedback_helpful"
+                        },
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "👎 Not Helpful"},
+                            "style": "danger",
+                            "value": "not_helpful",
+                            "action_id": "feedback_not_helpful"
+                        },
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                            "value": "give_feedback",
+                            "action_id": "feedback_text"
+                        }
+                    ]
+                }
+            ],
+            thread_ts=thread_ts
+        )
         logger.info("Response sent successfully")
         
     except Exception as e:
         logger.error(f"Error handling mention: {e}")
         await say("❌ Sorry, I had trouble answering that.", thread_ts=event.get("thread_ts") or event["ts"])
+
+# Feedback button handlers
+@slack_app.action("feedback_helpful")
+async def handle_helpful_feedback(ack, body, client):
+    await ack()
+    user = body["user"]["id"]
+    channel = body["channel"]["id"]
+    thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    await client.chat_postEphemeral(
+        channel=channel,
+        user=user,
+        text="Thanks for your feedback!",
+        thread_ts=thread_ts
+    )
+
+@slack_app.action("feedback_not_helpful")
+async def handle_not_helpful_feedback(ack, body, client):
+    await ack()
+    user = body["user"]["id"]
+    channel = body["channel"]["id"]
+    thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    await client.chat_postEphemeral(
+        channel=channel,
+        user=user,
+        text="Sorry to hear that. Your feedback has been noted.",
+        thread_ts=thread_ts
+    )
+
+@slack_app.action("feedback_text")
+async def open_feedback_modal(ack, body, client):
+    await ack()
+    trigger_id = body["trigger_id"]
+    channel = body["channel"]["id"]
+    thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    await client.views_open(
+        trigger_id=trigger_id,
+        view={
+            "type": "modal",
+            "callback_id": "submit_feedback",
+            "private_metadata": f"{channel}|{thread_ts}",
+            "title": {"type": "plain_text", "text": "Feedback"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "close": {"type": "plain_text", "text": "Cancel"},
+            "blocks": [
+                {
+                    "type": "input",
+                    "block_id": "feedback_input",
+                    "label": {"type": "plain_text", "text": "Your feedback"},
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "feedback"
+                    }
+                }
+            ]
+        }
+    )
+
+@slack_app.view("submit_feedback")
+async def handle_feedback_submission(ack, body, view, client, logger):
+    await ack()  # Always acknowledge first to avoid Slack UI errors
+    user = body["user"]["id"]
+    try:
+        feedback = view["state"]["values"]["feedback_input"]["feedback"]["value"]
+    except KeyError:
+        logger.error(f"Feedback key missing in view state: {view['state']['values']}")
+        channel, thread_ts = view["private_metadata"].split("|")
+        await client.chat_postEphemeral(
+            channel=channel,
+            user=user,
+            text="Sorry, we couldn't read your feedback. Please try again.",
+            thread_ts=thread_ts
+        )
+        return
+    channel, thread_ts = view["private_metadata"].split("|")
+    # Optionally, get question/answer from thread_histories
+    history = thread_histories.get(thread_ts, [])
+    question = history[0]["content"] if history else ""
+    answer = history[-1]["content"] if history else ""
+    # Log feedback to Google Sheets
+    try:
+        from services.google_sheets_service import GoogleSheetsService
+        sheets_service = GoogleSheetsService()
+        sheets_service.append_feedback(user, channel, thread_ts, feedback, question, answer)
+        await client.chat_postEphemeral(
+            channel=channel,
+            user=user,
+            text="Thank you for your feedback! 💬",
+            thread_ts=thread_ts
+        )
+    except Exception as e:
+        logger.error(f"Error saving feedback to Google Sheets: {e}")
+        await client.chat_postEphemeral(
+            channel=channel,
+            user=user,
+            text="Sorry, there was an error saving your feedback. Please try again later.",
+            thread_ts=thread_ts
+        )
 
 @slack_app.command("/hello-bolt-python")
 async def command(ack, body, respond):
@@ -107,8 +250,6 @@ async def get_status():
     return await chatbot_service.get_system_status()
 
 if __name__ == "__main__":
-    import asyncio
-
     async def main():
         logger.info("Starting Superbank Procurement Assistant in Socket Mode...")
         handler = AsyncSocketModeHandler(slack_app, SLACK_APP_TOKEN)

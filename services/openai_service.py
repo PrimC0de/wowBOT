@@ -7,7 +7,7 @@ import numpy as np
 import asyncio
 
 from config import (
-    OPENROUTER_API_KEY, OPENROUTER_MODEL_OPENAI, OPENROUTER_MODEL_ANTHROPIC,
+    OPENROUTER_API_KEY, OPENROUTER_MODEL_OPENAI, OPENROUTER_MODEL_ANTHROPIC, OPENROUTER_MODEL_DEEPSEEK, OPENROUTER_MODEL_LLAMA, OPENROUTER_MODEL_GEMINI,
     OPENAI_API_KEY, OPENAI_MODEL, EMBEDDING_MODEL,
     CLASSIFIER_PROMPT, TRANSLATOR_PROMPT, RERANK_PROMPT,
     VENDOR_EXTRACTOR_PROMPT, ASSISTANT_PROMPT
@@ -44,7 +44,7 @@ class OpenAIService:
         async with self.semaphore:
             try:
                 response = await self.openrouter_client.chat.completions.create(
-                    model=OPENROUTER_MODEL_OPENAI,
+                    model=OPENROUTER_MODEL_ANTHROPIC,
                     temperature=temperature,
                     messages=messages
                 )

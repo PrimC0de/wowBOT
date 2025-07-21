@@ -1,5 +1,5 @@
 .env
-credential.json
+credentials.json
 policies/
 data/
 .venv/

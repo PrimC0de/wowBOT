@@ -10,7 +10,10 @@ OPENAI_MODEL = "gpt-4o-mini"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 OPENROUTER_MODEL_OPENAI = "openai/gpt-4.1"
-OPENROUTER_MODEL_ANTHROPIC = "anthropic/claude-3-opus"
+OPENROUTER_MODEL_ANTHROPIC = "anthropic/claude-sonnet-4"
+OPENROUTER_MODEL_DEEPSEEK = "deepseek/deepseek-r1"
+OPENROUTER_MODEL_LLAMA = "meta-llama/llama-4-maverick"
+OPENROUTER_MODEL_GEMINI = "google/gemini-2.5-flash"
 
 EMBEDDING_MODEL = "text-embedding-3-small"
 
@@ -42,8 +45,8 @@ KNOWLEDGE_FILES = {
 
 
 # Google Sheets Configuration
-GOOGLE_SHEETS_CREDENTIALS = os.getenv("GOOGLE_SHEETS_CREDENTIALS", "credential.json")
-GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID", "1LElEEe5MTDFyMLdU-JpexI3WI-px850_3gbklm3KKHQ")
+GOOGLE_SHEETS_CREDENTIALS = os.getenv("GOOGLE_SHEETS_CREDENTIALS", "credentials.json")
+GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID")
 
 # System Prompts
 CLASSIFIER_PROMPT = (

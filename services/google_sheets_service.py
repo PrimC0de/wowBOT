@@ -28,4 +28,19 @@ class GoogleSheetsService:
             return vendor_rows
         except Exception as e:
             logger.error(f"Error retrieving vendor data: {e}")
-            return [] 
+            return []
+
+    def append_feedback(self, user: str, channel: str, thread_ts: str, feedback: str, question: str, answer: str):
+        """Append a feedback entry to the Feedback worksheet (or main sheet if Feedback does not exist)."""
+        try:
+            # Try to use a worksheet named 'Feedback', else use the main sheet
+            try:
+                worksheet = self.sheet.spreadsheet.worksheet('Feedback')
+            except Exception:
+                worksheet = self.sheet
+            worksheet.append_row([
+                user, channel, thread_ts, feedback, question, answer
+            ])
+            logger.info(f"Appended feedback from user {user} to Google Sheets.")
+        except Exception as e:
+            logger.error(f"Error appending feedback: {e}") 
