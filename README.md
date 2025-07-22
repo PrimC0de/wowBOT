@@ -5,7 +5,7 @@ Created as part of Internal's AI Chatbot Project under Procurement Team.
 
 # Superbank Procurement Assistant
 
-A modern, layered chatbot architecture for Superbank Indonesia's procurement policies using OpenAI, FAISS, FastAPI, and Google Sheets integration.
+A modern, layered chatbot architecture for Superbank Indonesia's procurement policies using OpenAI, FAISS, FastAPI, and Google Sheets integration. The bot can answer questions from both static documents and dynamic spreadsheet data.
 
 ---
 
@@ -145,6 +145,39 @@ python generate_embeddings.py
   - Document any company-specific configuration or deployment steps in an internal wiki.
   - Tag a stable release and keep a CHANGELOG.md for major updates.
   - Add an AUTHORS or CONTRIBUTORS file to recognize maintainers.
+
+---
+
+## 📊 Google Sheets Integration
+
+The bot now supports answering questions based on live Google Sheets data. This feature allows you to query your spreadsheet data using natural language.
+
+### Features:
+- **Automatic Query Detection**: The bot automatically detects when you're asking about spreadsheet data
+- **Smart Search**: Searches across all columns using extracted keywords from your questions
+- **Natural Language Responses**: AI-powered responses based on the found data
+- **Multi-worksheet Support**: Can access different sheets within your spreadsheet
+
+### Setup:
+1. Follow the detailed setup guide in `SPREADSHEET_SETUP.md`
+2. Configure your Google Cloud service account and enable the Sheets API
+3. Set the required environment variables
+4. Test the integration using `python test_sheets.py`
+
+### Example Queries:
+- `@bot show me all the vendor data`
+- `@bot find information about PT. ABC Company`
+- `@bot search for companies in Jakarta`
+- `@bot what contact information do you have for [company name]?`
+
+### Testing:
+```bash
+# Test the Google Sheets integration
+python test_sheets.py
+
+# Check system status (includes spreadsheet connection)
+curl http://localhost:3000/status
+```
 
 ---
 

@@ -43,10 +43,16 @@ KNOWLEDGE_FILES = {
     "pengadaan": "data/_knowledge/pengadaan_knowledge.txt"
 }
 
-
 # Google Sheets Configuration
+# You need to set these environment variables:
+# GOOGLE_SHEETS_CREDENTIALS: Path to your Google service account JSON file
+# GOOGLE_SHEETS_ID: The ID of your Google Sheets document (from the URL)
 GOOGLE_SHEETS_CREDENTIALS = os.getenv("GOOGLE_SHEETS_CREDENTIALS", "credentials.json")
 GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID")
+
+# Spreadsheet Configuration
+SPREADSHEET_QUERY_THRESHOLD = 0.7  # Confidence threshold for detecting spreadsheet queries
+MAX_SPREADSHEET_RESULTS = 10  # Maximum number of spreadsheet results to show
 
 # System Prompts
 CLASSIFIER_PROMPT = (
@@ -83,14 +89,14 @@ VENDOR_EXTRACTOR_PROMPT = (
 
 ASSISTANT_PROMPT = (
     "You are a procurement assistant for Superbank Indonesia. "
+    "You can answer questions about procurement policies using document knowledge and also help with spreadsheet data queries. "
     "Use the provided context to answer the user's question accurately and faithfully. "
     "If the context contains a clear answer, prioritize it and cite the relevant part. "
     "If you need to infer or reason based on the context, use a natural, conversational phrase to indicate this, such as 'Based on the information available...', 'It seems that...', 'As far as I can tell...', or 'From what I understand...'. "
-    "Avoid repeating the same phrase and do not use formal language like 'The context does not explicitly state...'. "
     "Vary your wording to keep the conversation friendly and natural, but always make it clear when you are interpreting or deducing from the context. "
     "Never make up facts. Do not include general knowledge or assumptions that are not supported by the context. "
     "Always validate your answer against the provided context. If confidence is below 80%, say so and refer to procurement@superbank.id. If confidence is 80% or higher, do not include a referral unless the user asks for more information. "
-    "Always offer another guidance or make sure that is what the user is trying to know after every response."
+    "Always offer additional guidance or make sure that is what the user is trying to know after every response."
 )
 
 # Server Configuration

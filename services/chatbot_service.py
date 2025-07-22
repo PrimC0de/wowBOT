@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 
 from services.retrieval_service import RetrievalService
 from services.openai_service import OpenAIService
+from services.spreadsheet_service import SpreadsheetService
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ class ChatbotService:
     def __init__(self):
         self.retrieval_service = RetrievalService()
         self.openai_service = OpenAIService()
+        self.spreadsheet_service = SpreadsheetService()
     
     async def process_user_message(self, user_message: str) -> str:
         """Process a user message and return a response."""
@@ -22,12 +24,19 @@ class ChatbotService:
             if not prompt:
                 return "Hi! Please ask me something after mentioning me."
             
-            # Check if it's a vendor question (future feature)
+            # Check if it's a spreadsheet query first
+            if self.spreadsheet_service.detect_spreadsheet_query(prompt):
+                logger.info(f"Detected spreadsheet query: {prompt}")
+                spreadsheet_context = await self.spreadsheet_service.search_spreadsheet_data(prompt)
+                response = await self.spreadsheet_service.answer_with_spreadsheet_data(prompt, spreadsheet_context)
+                return response
+            
+            # Check if it's a vendor question (legacy support)
             vendor_info = await self._check_vendor_question(prompt)
             if vendor_info:
                 return self._handle_vendor_question(vendor_info)
             
-            # Process the query through retrieval pipeline
+            # Process the query through document retrieval pipeline
             context_text = await self.retrieval_service.process_query(prompt)
             
             # Generate response using the context
@@ -74,16 +83,29 @@ class ChatbotService:
             "Please contact procurement@superbank.id for vendor information."
         )
     
-    def get_system_status(self) -> Dict[str, Any]:
+    async def get_system_status(self) -> Dict[str, Any]:
         """Get system status information."""
         try:
-            return {
+            # Get document retrieval status
+            doc_status = {
                 "available_document_types": self.retrieval_service.get_available_document_types(),
                 "chunk_counts": {
                     doc_type: self.retrieval_service.get_chunk_count(doc_type)
                     for doc_type in self.retrieval_service.get_available_document_types()
-                },
-                "status": "operational"
+                }
+            }
+            
+            # Get spreadsheet status
+            try:
+                spreadsheet_summary = await self.spreadsheet_service.get_spreadsheet_summary()
+                spreadsheet_status = {"connected": True, "summary": spreadsheet_summary}
+            except Exception as e:
+                spreadsheet_status = {"connected": False, "error": str(e)}
+            
+            return {
+                "status": "operational",
+                "document_retrieval": doc_status,
+                "spreadsheet": spreadsheet_status
             }
         except Exception as e:
             logger.error(f"Error getting system status: {e}")
