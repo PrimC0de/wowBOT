@@ -42,26 +42,29 @@ class GoogleSheetsService:
             client = gspread.authorize(creds)
             if not GOOGLE_SHEETS_ID:
                 raise ValueError("GOOGLE_SHEETS_ID is not set in the environment.")
-            self.sheet = client.open_by_key(GOOGLE_SHEETS_ID).sheet1
+            self.spreadsheet = client.open_by_key(GOOGLE_SHEETS_ID)  # <-- Set spreadsheet
+            self.sheet = self.spreadsheet.sheet1  # Default to first sheet
             logger.info("Google Sheets connection established using OAuth.")
         except Exception as e:
             logger.error(f"Failed to initialize GoogleSheetsService: {e}")
             raise
 
-    def get_sheet_data(self, sheet_name: str) -> List[Dict[str, Any]]:
-        """Return all records from the specified worksheet as a list of dicts."""
+    def get_sheet_data(self, sheet_name: str, vendor_name: str = None) -> List[Dict[str, Any]]:
+        """Return all records from the specified worksheet as a list of dicts. Optionally filter by vendor_name."""
         try:
-            worksheet = self.spreadsheet.sheet1
+            worksheet = self.spreadsheet.worksheet(sheet_name)
             records = worksheet.get_all_records()
-            vendor_rows = []
-            for r in records:
-                company_name = r.get("Nama Perusahaan", "")
-                if isinstance(company_name, str) and vendor_name.lower() in company_name.lower():
-                    vendor_rows.append(r)
-            logger.info(f"Found {len(vendor_rows)} records for vendor '{vendor_name}'.")
-            return vendor_rows
+            if vendor_name:
+                vendor_rows = []
+                for r in records:
+                    company_name = r.get("Nama Perusahaan", "")
+                    if isinstance(company_name, str) and vendor_name.lower() in company_name.lower():
+                        vendor_rows.append(r)
+                logger.info(f"Found {len(vendor_rows)} records for vendor '{vendor_name}'.")
+                return vendor_rows
+            return records
         except Exception as e:
-            logger.error(f"Error retrieving vendor data: {e}")
+            logger.error(f"Error retrieving data from sheet '{sheet_name}': {e}")
             return []
 
     def append_feedback(self, user: str, channel: str, thread_ts: str, feedback: str, question: str, answer: str):
