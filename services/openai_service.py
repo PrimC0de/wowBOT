@@ -2,13 +2,13 @@ import json
 import re
 import logging
 from typing import List, Dict, Optional
-import openai
 import numpy as np
 import asyncio
+from sentence_transformers import SentenceTransformer
 
 from config import (
     OPENROUTER_API_KEY, OPENROUTER_MODEL_OPENAI, OPENROUTER_MODEL_ANTHROPIC, OPENROUTER_MODEL_DEEPSEEK, OPENROUTER_MODEL_LLAMA, OPENROUTER_MODEL_GEMINI,
-    OPENAI_API_KEY, OPENAI_MODEL, EMBEDDING_MODEL,
+    OPENAI_API_KEY, OPENAI_MODEL, EMBEDDING_MODEL, LLAMA_EMBEDDING_MODEL,
     CLASSIFIER_PROMPT, TRANSLATOR_PROMPT, RERANK_PROMPT,
     VENDOR_EXTRACTOR_PROMPT, ASSISTANT_PROMPT
 )
@@ -19,26 +19,24 @@ class OpenAIService:
     """Service class for all OpenRouter API interactions (async version)."""
     
     def __init__(self, max_concurrent_requests: int = 5):
-        self.openai_client = openai.AsyncOpenAI(
-            api_key=OPENAI_API_KEY
-        )
+        # Only keep OpenRouter client for chat, not for embeddings
+        import openai
         self.openrouter_client = openai.AsyncOpenAI(
             api_key=OPENROUTER_API_KEY,
             base_url="https://openrouter.ai/api/v1"
         )
         self.semaphore = asyncio.Semaphore(max_concurrent_requests)
+        # Initialize Hugging Face embedding model
+        self.hf_model = SentenceTransformer(LLAMA_EMBEDDING_MODEL)
     
     async def get_embedding(self, text: str) -> np.ndarray:
-        async with self.semaphore:
-            try:
-                response = await self.openai_client.embeddings.create(
-                    model=EMBEDDING_MODEL,
-                    input=text
-                )
-                return np.array(response.data[0].embedding).astype("float32")
-            except Exception as e:
-                logger.error(f"Error getting embedding: {e}")
-                raise
+        # Hugging Face models are not async, so run in thread executor
+        import concurrent.futures
+        loop = asyncio.get_event_loop()
+        def encode():
+            return self.hf_model.encode([text])[0]
+        embedding = await loop.run_in_executor(None, encode)
+        return np.array(embedding).astype("float32")
     
     async def chat_completion(self, messages: List[Dict[str, str]], temperature: float = 0) -> str:
         async with self.semaphore:

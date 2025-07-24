@@ -58,7 +58,23 @@ def load_chunks(chunk_file: str) -> List[str]:
     return [chunk.strip() for chunk in chunks if chunk.strip()]
 
 async def generate_embeddings_for_chunks(chunks: List[str], openai_service: OpenAIService) -> np.ndarray:
-    """Generate embeddings for a list of chunks using OpenAIService."""
+    """Generate embeddings for a list of chunks using OpenAIService. Uses batch encoding if available."""
+    # Try to use batch encoding if the OpenAIService uses Hugging Face
+    if hasattr(openai_service, 'hf_model'):
+        try:
+            import numpy as np
+            logger.info(f"Batch encoding {len(chunks)} chunks with Hugging Face model...")
+            # Hugging Face models are not async, so run in thread executor
+            import asyncio
+            loop = asyncio.get_event_loop()
+            def encode():
+                return openai_service.hf_model.encode(chunks, show_progress_bar=True)
+            embeddings = await loop.run_in_executor(None, encode)
+            logger.info(f"Batch encoded {len(chunks)} chunks.")
+            return np.vstack(embeddings)
+        except Exception as e:
+            logger.error(f"Batch encoding failed, falling back to per-chunk: {e}")
+    # Fallback: per-chunk encoding (async)
     embeddings = []
     for i, chunk in enumerate(chunks):
         try:
@@ -68,7 +84,7 @@ async def generate_embeddings_for_chunks(chunks: List[str], openai_service: Open
                 logger.info(f"Embedded {i + 1}/{len(chunks)} chunks...")
         except Exception as e:
             logger.error(f"Failed to embed chunk {i}: {e}")
-            embeddings.append(np.zeros((1536,), dtype=np.float32))  # fallback, adjust dim if needed
+            embeddings.append(np.zeros((384,), dtype=np.float32))  # fallback for MiniLM
     return np.vstack(embeddings)
 
 def save_faiss_index(embeddings: np.ndarray, index_path: str):
