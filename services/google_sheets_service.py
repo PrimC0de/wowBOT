@@ -1,20 +1,49 @@
 import logging
 from typing import List, Dict, Any
 import gspread
-from google.oauth2.service_account import Credentials
-from config import GOOGLE_SHEETS_CREDENTIALS, GOOGLE_SHEETS_ID
+import os
+from google.oauth2.credentials import Credentials as UserCredentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from config import GOOGLE_SHEETS_ID
 
 logger = logging.getLogger(__name__)
+
+# --- New OAuth 2.0 Authentication ---
+def get_oauth_credentials():
+    """Gets user credentials using OAuth 2.0 flow."""
+    creds = None
+    # The file token.json stores the user's access and refresh tokens.
+    if os.path.exists("token.json"):
+        creds = UserCredentials.from_authorized_user_file("token.json")
+    
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                "client_secret.json",  # Make sure you have this file
+                scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            )
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
+    return creds
+# --- End of New Authentication ---
 
 class GoogleSheetsService:
     """Service for interacting with Google Sheets for procurement data."""
     def __init__(self):
         try:
-            scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-            creds = Credentials.from_service_account_file(GOOGLE_SHEETS_CREDENTIALS, scopes=scopes)
+            # --- Use the new OAuth function ---
+            creds = get_oauth_credentials()
             client = gspread.authorize(creds)
-            self.spreadsheet = client.open_by_key(GOOGLE_SHEETS_ID)
-            logger.info("Google Sheets connection established.")
+            if not GOOGLE_SHEETS_ID:
+                raise ValueError("GOOGLE_SHEETS_ID is not set in the environment.")
+            self.sheet = client.open_by_key(GOOGLE_SHEETS_ID).sheet1
+            logger.info("Google Sheets connection established using OAuth.")
         except Exception as e:
             logger.error(f"Failed to initialize GoogleSheetsService: {e}")
             raise
@@ -22,20 +51,13 @@ class GoogleSheetsService:
     def get_sheet_data(self, sheet_name: str) -> List[Dict[str, Any]]:
         """Return all records from the specified worksheet as a list of dicts."""
         try:
-            worksheet = self.spreadsheet.worksheet(sheet_name)
-            records = worksheet.get_all_records()
-            logger.info(f"Fetched {len(records)} records from sheet '{sheet_name}'.")
-            return records
-        except Exception as e:
-            logger.error(f"Error retrieving data from sheet '{sheet_name}': {e}")
-            return []
-
-    def get_vendor_data(self, vendor_name: str) -> List[Dict[str, Any]]:
-        """Return all vendor records matching the vendor_name (case-insensitive substring match) from the default sheet."""
-        try:
             worksheet = self.spreadsheet.sheet1
             records = worksheet.get_all_records()
-            vendor_rows = [r for r in records if vendor_name.lower() in r.get("Nama Perusahaan", "").lower()]
+            vendor_rows = []
+            for r in records:
+                company_name = r.get("Nama Perusahaan", "")
+                if isinstance(company_name, str) and vendor_name.lower() in company_name.lower():
+                    vendor_rows.append(r)
             logger.info(f"Found {len(vendor_rows)} records for vendor '{vendor_name}'.")
             return vendor_rows
         except Exception as e:
