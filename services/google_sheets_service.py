@@ -34,7 +34,7 @@ def get_oauth_credentials():
 # --- End of New Authentication ---
 
 class GoogleSheetsService:
-    """Service for interacting with Google Sheets for vendor data."""
+    """Service for interacting with Google Sheets for procurement data."""
     def __init__(self):
         try:
             # --- Use the new OAuth function ---
@@ -48,10 +48,11 @@ class GoogleSheetsService:
             logger.error(f"Failed to initialize GoogleSheetsService: {e}")
             raise
 
-    def get_vendor_data(self, vendor_name: str) -> List[Dict[str, Any]]:
-        """Return all vendor records matching the vendor_name (case-insensitive substring match)."""
+    def get_sheet_data(self, sheet_name: str) -> List[Dict[str, Any]]:
+        """Return all records from the specified worksheet as a list of dicts."""
         try:
-            records = self.sheet.get_all_records()
+            worksheet = self.spreadsheet.sheet1
+            records = worksheet.get_all_records()
             vendor_rows = []
             for r in records:
                 company_name = r.get("Nama Perusahaan", "")
@@ -68,9 +69,9 @@ class GoogleSheetsService:
         try:
             # Try to use a worksheet named 'Feedback', else use the main sheet
             try:
-                worksheet = self.sheet.spreadsheet.worksheet('Feedback')
+                worksheet = self.spreadsheet.worksheet('Feedback')
             except Exception:
-                worksheet = self.sheet
+                worksheet = self.spreadsheet.sheet1
             worksheet.append_row([
                 user, channel, thread_ts, feedback, question, answer
             ])

@@ -9,6 +9,7 @@ from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
 from config import HOST, PORT, ASSISTANT_PROMPT
 from services.chatbot_service import ChatbotService
 import asyncio
+import re
 
 # Configure logging
 logging.basicConfig(
@@ -47,6 +48,16 @@ def get_thread_context(thread_ts):
     context = " ".join([turn["content"] for turn in history])
     return context
 
+def markdown_to_slack(text):
+    """Convert Markdown bold (**bold**) to Slack bold (*bold*), _italic_ to _italic_, and [text](url) to <url|text>."""
+    # Convert **bold** to *bold*
+    text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', text)
+    # Convert _italic_ (Markdown) to _italic_ (Slack)
+    text = re.sub(r'_(.*?)_', r'_\1_', text)
+    # Convert [text](url) to <url|text> for Slack
+    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<\2|\1>', text)
+    return text
+
 @slack_app.event("app_mention")
 async def handle_mention(event, say, logger):
     """Handle Slack app mentions."""
@@ -80,6 +91,9 @@ async def handle_mention(event, say, logger):
             display_text = f"<@{user_id}>\n" + answer
         else:
             display_text = answer
+
+        # Convert Markdown to Slack formatting
+        display_text = markdown_to_slack(display_text)
 
         # Send the answer with feedback buttons using Block Kit
         await say(
