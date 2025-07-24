@@ -81,29 +81,24 @@ class OpenAIService:
         return await self.chat_completion(messages)
     
     async def rerank_chunks(self, query: str, chunks: List[str], top_n: int = 3) -> str:
-        scored_chunks = []
-        for i, chunk in enumerate(chunks):
-            prompt = (
-                f"Question:\n{query}\n\n"
-                f"Chunk:\n{chunk}\n\n"
-                "On a scale of 1 to 10, how relevant is this chunk to the question? "
-                "Only respond with the number (no explanation)."
-            )
-            messages = [
-                {"role": "system", "content": RERANK_PROMPT},
-                {"role": "user", "content": prompt}
-            ]
-            try:
-                score_text = await self.chat_completion(messages)
-                match = re.search(r"\b([1-9]|10)\b", score_text)
-                score = int(match.group()) if match else 0
-            except Exception as e:
-                logger.warning(f"Error scoring chunk {i}: {e}")
-                score = 0
-            scored_chunks.append((score, chunk))
-        scored_chunks.sort(key=lambda x: x[0], reverse=True)
-        top_chunks = [chunk for score, chunk in scored_chunks[:top_n]]
-        return "\n\n".join(top_chunks)
+        # Embedding-based reranking: compute similarity between query and each chunk
+        try:
+            query_embedding = await self.get_embedding(query)
+            chunk_embeddings = []
+            for chunk in chunks:
+                emb = await self.get_embedding(chunk)
+                chunk_embeddings.append(emb)
+            # Compute cosine similarity
+            similarities = [float(np.dot(query_embedding, emb) / (np.linalg.norm(query_embedding) * np.linalg.norm(emb))) for emb in chunk_embeddings]
+            # Pair each chunk with its similarity
+            scored_chunks = list(zip(similarities, chunks))
+            # Sort by similarity descending
+            scored_chunks.sort(key=lambda x: x[0], reverse=True)
+            top_chunks = [chunk for score, chunk in scored_chunks[:top_n]]
+            return "\n\n".join(top_chunks)
+        except Exception as e:
+            logger.error(f"Error in embedding-based rerank_chunks: {e}")
+            return ""
     
     async def extract_vendor_info(self, prompt: str) -> Optional[Dict[str, str]]:
         messages = [
