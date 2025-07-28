@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Chunking Functions ---
-def split_text_into_chunks(text: str, max_tokens: int = 800, overlap: int = 100) -> List[str]:
+def split_text_into_chunks(text: str, max_tokens: int = 1200, overlap: int = 150) -> List[str]:
     """Split text into chunks based on token count with overlap."""
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     words = text.split()
@@ -32,7 +32,7 @@ def split_text_into_chunks(text: str, max_tokens: int = 800, overlap: int = 100)
         chunks.append(" ".join(current_chunk))
     return chunks
 
-def chunk_knowledge_file(input_path: str, output_path: str, max_tokens: int = 800, overlap: int = 100):
+def chunk_knowledge_file(input_path: str, output_path: str, max_tokens: int = 1200, overlap: int = 150):
     """Read a .txt file, split into chunks, and save as .chunks.txt."""
     with open(input_path, "r", encoding="utf-8") as f:
         text = f.read()
@@ -43,7 +43,7 @@ def chunk_knowledge_file(input_path: str, output_path: str, max_tokens: int = 80
     logger.info(f"✅ {input_path} split into {len(chunks)} chunks and saved to {output_path}")
 
 
-def process_all_knowledge_files(knowledge_map: dict, chunk_map: dict, max_tokens: int = 800, overlap: int = 100):
+def process_all_knowledge_files(knowledge_map: dict, chunk_map: dict, max_tokens: int = 1200, overlap: int = 150):
     """Process all knowledge .txt files, save chunk files, and print a summary."""
     for doc_type, input_path in knowledge_map.items():
         output_path = chunk_map[doc_type]
