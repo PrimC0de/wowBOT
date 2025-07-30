@@ -27,21 +27,24 @@ FAISS_INDEXES = {
     "sop": "data/_indexes/faiss_index_sop.index",
     "vmc": "data/_indexes/faiss_index_vmc.index", 
     "vra": "data/_indexes/faiss_index_vra.index",
-    "pengadaan": "data/_indexes/faiss_index_pengadaan.index"
+    "pengadaan": "data/_indexes/faiss_index_pengadaan.index",
+    "links": "data/_indexes/faiss_index_links.index"
 }
 
 CHUNK_FILES = {
     "sop": "data/_chunks/sopchunks.txt",
     "vmc": "data/_chunks/vmcchunks.txt",
     "vra": "data/_chunks/vrachunks.txt", 
-    "pengadaan": "data/_chunks/pengadaanchunks.txt"
+    "pengadaan": "data/_chunks/pengadaanchunks.txt",
+    "links": "data/_chunks/linkschunks.txt"
 }
 
 KNOWLEDGE_FILES = {
     "sop": "data/_knowledge/sop.txt",
     "vmc": "data/_knowledge/vmc_knowledge.txt",
     "vra": "data/_knowledge/vra_knowledge.txt",
-    "pengadaan": "data/_knowledge/pengadaan_knowledge.txt"
+    "pengadaan": "data/_knowledge/pengadaan_knowledge.txt",
+    "links": "data/_knowledge/link_knowledge.txt"
 }
 
 
@@ -51,18 +54,25 @@ GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID")
 
 # System Prompts
 CLASSIFIER_PROMPT = (
-    "You are a smart document classifier for procurement policy documents with a fixed hierarchy:\n"
-    "- VMC (Vendor Management Charter)\n"
-    "- SOP (Standard Operating Procedures)\n"
-    "- Pengadaan (Procurement Process)\n"
-    "- VRA (Vendor Risk Assessment)\n\n"
-    "When classifying a question, choose the highest relevant level in the hierarchy. "
-    "For example:\n"
-    "- If it's about the committee's internal structure, its ultimate authority, or the final approval on high-value and high-risk decisions, choose 'vmc'.\n"
-    "- If it's about detailed, step-by-step operational workflows and approval flowcharts, particularly for the Vendor Risk Assessment (VRA) process, choose 'sop'.\n"
-    "- If it's about all purchasing methods, financial thresholds, sourcing strategies, and the overall rules of engagement with vendors, choose 'pengadaan'.\n"
-    "- If it's about understanding what specific risks to evaluate, use the Third-Party Risk Management Guideline (TPRA) or Vendor Risk Management Guideline (VRA); to understand the process of how to conduct the assessment, choose 'vra'.\n\n"
-    "Always return exactly one of: vmc, sop, pengadaan, vra."
+    "Classify this procurement question into exactly one category:\n\n"
+    "vmc = Vendor Management Charter (committee structure, authority, high-value decisions)\n"
+    "sop = Standard Operating Procedures (workflows, step-by-step processes)\n"
+    "pengadaan = Procurement Process (purchasing methods, thresholds, vendor engagement)\n"
+    "vra = Vendor Risk Assessment (risk evaluation, assessment processes)\n"
+    "links = Forms, Links, Resources (PR forms, Oracle catalogue, item numbers, Waiver of Competition)\n\n"
+    "EXAMPLES:\n"
+    "- 'where can i find the PR form' → links\n"
+    "- 'I need the Oracle catalogue' → links\n"
+    "- 'How do I access the BPA list?' → links\n"
+    "- 'Give me the procurement forms' → links\n"
+    "- 'Where are the item numbers?' → links\n"
+    "- 'I need the Waiver of Competition form' → links\n"
+    "- 'What is the SOP for vendor approval?' → sop\n"
+    "- 'How do I conduct a VRA?' → vra\n"
+    "- 'What are the VMC requirements?' → vmc\n"
+    "- 'What are the procurement thresholds?' → pengadaan\n\n"
+    "CRITICAL: If the question asks for a link, form, URL, resource, or access to a specific tool/form, choose 'links'.\n\n"
+    "Return only: vmc, sop, pengadaan, vra, or links"
 )
 
 TRANSLATOR_PROMPT = (
@@ -91,6 +101,7 @@ ASSISTANT_PROMPT = (
     "Vary your wording to keep the conversation friendly and natural, but always make it clear when you are interpreting or deducing from the context. "
     "Never make up facts. Do not include general knowledge or assumptions that are not supported by the context. "
     "Always validate your answer against the provided context. If confidence is below 80%, say so and refer to procurement@superbank.id. If confidence is 80% or higher, do not include a referral unless the user asks for more information. "
+    "When providing links or forms, always include the full URL and a brief description of what the link is for. "
     "Always offer another guidance or make sure that is what the user is trying to know after every response."
 )
 

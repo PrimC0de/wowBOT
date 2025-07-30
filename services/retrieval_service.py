@@ -103,23 +103,23 @@ class RetrievalService:
         
         try:
             relevance_prompt = """
-You are a relevance assessor. Given a user question and policy content, determine how well the policy content DIRECTLY answers the specific question asked.
+                You are a relevance assessor. Given a user question and policy content, determine how well the policy content DIRECTLY answers the specific question asked.
 
-Score from 0.0 to 1.0 where:
-- 0.0-0.3: Policy content doesn't answer the question at all or is completely irrelevant
-- 0.4-0.5: Policy content is somewhat related but doesn't directly answer the question
-- 0.6-0.7: Policy content partially answers the question but lacks specific details
-- 0.8-0.9: Policy content provides a good answer to the question
-- 1.0: Policy content provides a comprehensive and direct answer to the question
+                Score from 0.0 to 1.0 where:
+                - 0.0-0.3: Policy content doesn't answer the question at all or is completely irrelevant
+                - 0.4-0.5: Policy content is somewhat related but doesn't directly answer the question
+                - 0.6-0.7: Policy content partially answers the question but lacks specific details
+                - 0.8-0.9: Policy content provides a good answer to the question
+                - 1.0: Policy content provides a comprehensive and direct answer to the question
 
-IMPORTANT: Only give high scores (0.8+) if the policy content contains the SPECIFIC answer to the question. General background information, definitions, or procedural overviews are not enough. The content must directly address what the user is asking for.
+                IMPORTANT: Only give high scores (0.8+) if the policy content contains the SPECIFIC answer to the question. General background information, definitions, or procedural overviews are not enough. The content must directly address what the user is asking for.
 
-Question: "{query}"
-Policy Content:
-{policy_content}
+                Question: "{query}"
+                Policy Content:
+                {policy_content}
 
-Respond with only the score (e.g., "0.4").
-"""
+                Respond with only the score (e.g., "0.4").
+                """
             combined_policy = "\n\n".join(policy_chunks[:3])
             messages = [
                 {"role": "system", "content": relevance_prompt.format(query=query, policy_content=combined_policy)},
@@ -144,8 +144,19 @@ Respond with only the score (e.g., "0.4").
             logger.info(f"Original query: {query}")
             logger.info(f"Translated query: {translated_query}")
 
-            # Step 2: Classify document type
-            doc_type = await self.openai_service.classify_document_type(translated_query)
+            # Step 2: Hybrid classification: rule-based for links, AI for others
+            link_keywords = [
+                'link', 'form', 'where can i find', 'i need the', 'how do i access', 'give me the',
+                'pr form', 'oracle', 'catalogue', 'item numbers', 'waiver of competition', 'woc',
+                'bpa list', 'catalog', 'procurement tools', 'resources', 'submission form', 'portal', 'system'
+            ]
+            query_lower = query.lower()
+            has_link_keywords = any(keyword in query_lower for keyword in link_keywords)
+            if has_link_keywords:
+                doc_type = 'links'
+                logger.info(f"Hybrid classification: 'links' (keyword detected)")
+            else:
+                doc_type = await self.openai_service.classify_document_type(translated_query)
             logger.info(f"Classified document type: {doc_type}")
 
             # Step 3: Retrieve similar chunks from policies (ALWAYS try policies first)
@@ -201,7 +212,7 @@ Respond with only the score (e.g., "0.4").
         all_faq_chunks = []
         
         # Search across all document types for FAQ content
-        for doc_type in ["sop", "pengadaan", "vra", "vmc"]:
+        for doc_type in ["sop", "pengadaan", "vra", "vmc", "links"]:
             try:
                 # Get more chunks to increase chances of finding FAQ content
                 chunks = await self.retrieve_similar_chunks(query, doc_type, top_k=20)
