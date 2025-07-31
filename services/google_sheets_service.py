@@ -83,18 +83,26 @@ class GoogleSheetsService:
             logger.error(f"Error appending feedback: {e}")
 
     def record_vote(self, thread_ts: str, user_id: str, vote_type: str):
-        """Record a vote (useful/not_useful) and increment the appropriate counter in columns C3/C4."""
+        """Record a vote and increment the appropriate counter in 'Feedback Count' sheet."""
         try:
-            # Try to use a worksheet named 'Feedback', else use the main sheet
+            # Get or create the 'Feedback Count' worksheet
             try:
-                worksheet = self.spreadsheet.worksheet('Feedback')
+                feedback_count_sheet = self.spreadsheet.worksheet('Feedback Count')
             except Exception:
-                worksheet = self.spreadsheet.sheet1
+                # Create the sheet if it doesn't exist
+                feedback_count_sheet = self.spreadsheet.add_worksheet(title='Feedback Count', rows=10, cols=10)
+                # Add headers
+                feedback_count_sheet.update('A1:D3', [
+                    ['', '', 'Count', ''],
+                    ['', '', '', ''],
+                    ['', '', 'Useful', 'Not Useful']
+                ])
+                logger.info("Created 'Feedback Count' sheet with headers")
             
             # Get current values from C3 (useful) and C4 (not useful)
             try:
-                useful_count = int(worksheet.cell(3, 3).value or 0)
-                not_useful_count = int(worksheet.cell(3, 4).value or 0)
+                useful_count = int(feedback_count_sheet.cell(3, 3).value or 0)
+                not_useful_count = int(feedback_count_sheet.cell(3, 4).value or 0)
             except (ValueError, TypeError):
                 useful_count = 0
                 not_useful_count = 0
@@ -102,18 +110,23 @@ class GoogleSheetsService:
             # Increment the appropriate counter
             if vote_type == "useful":
                 useful_count += 1
-                worksheet.update_cell(3, 3, useful_count)
-                logger.info(f"Incremented useful count to {useful_count}")
+                feedback_count_sheet.update_cell(3, 3, useful_count)
+                logger.info(f"Incremented useful count to {useful_count} in 'Feedback Count' sheet")
             elif vote_type == "not_useful":
                 not_useful_count += 1
-                worksheet.update_cell(3, 4, not_useful_count)
-                logger.info(f"Incremented not useful count to {not_useful_count}")
+                feedback_count_sheet.update_cell(3, 4, not_useful_count)
+                logger.info(f"Incremented not useful count to {not_useful_count} in 'Feedback Count' sheet")
             
-            # Also log the individual vote for tracking
-            worksheet.append_row([
+            # Log individual vote in the main Feedback sheet for tracking
+            try:
+                feedback_sheet = self.spreadsheet.worksheet('Feedback')
+            except Exception:
+                feedback_sheet = self.spreadsheet.sheet1
+            
+            feedback_sheet.append_row([
                 user_id, thread_ts, vote_type, "vote_record", "", ""
             ])
-            logger.info(f"Recorded {vote_type} vote from user {user_id}")
+            logger.info(f"Recorded {vote_type} vote from user {user_id} in feedback log")
             
         except Exception as e:
             logger.error(f"Error recording vote: {e}")
@@ -121,7 +134,7 @@ class GoogleSheetsService:
     def has_user_voted(self, thread_ts: str, user_id: str) -> bool:
         """Check if a user has already voted on a specific thread."""
         try:
-            # Try to use a worksheet named 'Feedback', else use the main sheet
+            # Check in the main Feedback sheet for vote records
             try:
                 worksheet = self.spreadsheet.worksheet('Feedback')
             except Exception:
