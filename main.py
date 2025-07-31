@@ -148,6 +148,7 @@ async def handle_helpful_feedback(ack, body, client):
     user = body["user"]["id"]
     channel = body["channel"]["id"]
     thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    message_ts = body.get("message", {}).get("ts")
     
     # Track the useful feedback
     try:
@@ -157,7 +158,41 @@ async def handle_helpful_feedback(ack, body, client):
     except Exception as e:
         logger.error(f"Error updating useful feedback count: {e}")
     
-    # Note: Keeping all buttons visible - no message update needed
+    # Update the message to hide useful/not useful buttons but keep "Give Feedback" button
+    try:
+        # Get the original message text from the first block
+        original_blocks = body.get("message", {}).get("blocks", [])
+        message_text = ""
+        if original_blocks and len(original_blocks) > 0:
+            message_text = original_blocks[0].get("text", {}).get("text", "")
+        
+        await client.chat_update(
+            channel=channel,
+            ts=message_ts,
+            text=message_text,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": message_text
+                    }
+                },
+                {
+                    "type": "actions", 
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                            "value": "give_feedback",
+                            "action_id": "feedback_text"
+                        }
+                    ]
+                }
+            ]
+        )
+    except Exception as e:
+        logger.error(f"Error updating message after helpful feedback: {e}")
     
     await client.chat_postEphemeral(
         channel=channel,
@@ -172,6 +207,7 @@ async def handle_not_helpful_feedback(ack, body, client):
     user = body["user"]["id"]
     channel = body["channel"]["id"]
     thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    message_ts = body.get("message", {}).get("ts")
     
     # Track the not useful feedback
     try:
@@ -181,7 +217,41 @@ async def handle_not_helpful_feedback(ack, body, client):
     except Exception as e:
         logger.error(f"Error updating not useful feedback count: {e}")
     
-    # Note: Keeping all buttons visible - no message update needed
+    # Update the message to hide useful/not useful buttons but keep "Give Feedback" button
+    try:
+        # Get the original message text from the first block
+        original_blocks = body.get("message", {}).get("blocks", [])
+        message_text = ""
+        if original_blocks and len(original_blocks) > 0:
+            message_text = original_blocks[0].get("text", {}).get("text", "")
+        
+        await client.chat_update(
+            channel=channel,
+            ts=message_ts,
+            text=message_text,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": message_text
+                    }
+                },
+                {
+                    "type": "actions", 
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                            "value": "give_feedback",
+                            "action_id": "feedback_text"
+                        }
+                    ]
+                }
+            ]
+        )
+    except Exception as e:
+        logger.error(f"Error updating message after not helpful feedback: {e}")
     
     await client.chat_postEphemeral(
         channel=channel,
