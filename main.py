@@ -8,6 +8,7 @@ from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
 
 from config import HOST, PORT, ASSISTANT_PROMPT
 from services.chatbot_service import ChatbotService
+from services.google_sheets_service import GoogleSheetsService
 import asyncio
 import re
 
@@ -147,6 +148,52 @@ async def handle_helpful_feedback(ack, body, client):
     user = body["user"]["id"]
     channel = body["channel"]["id"]
     thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    message_ts = body.get("message", {}).get("ts")
+    
+    # Track the useful feedback
+    try:
+        sheets_service = GoogleSheetsService()
+        sheets_service.update_feedback_count("useful")
+        logger.info(f"Updated useful feedback count for user {user}")
+    except Exception as e:
+        logger.error(f"Error updating useful feedback count: {e}")
+    
+    # Update the message to hide useful/not useful buttons but keep "Give Feedback" button
+    try:
+        # Get the original message text from the first block
+        original_blocks = body.get("message", {}).get("blocks", [])
+        message_text = ""
+        if original_blocks and len(original_blocks) > 0:
+            message_text = original_blocks[0].get("text", {}).get("text", "")
+        
+        await client.chat_update(
+            channel=channel,
+            ts=message_ts,
+            text=message_text,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": message_text
+                    }
+                },
+                {
+                    "type": "actions", 
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                            "value": "give_feedback",
+                            "action_id": "feedback_text"
+                        }
+                    ]
+                }
+            ]
+        )
+    except Exception as e:
+        logger.error(f"Error updating message after helpful feedback: {e}")
+    
     await client.chat_postEphemeral(
         channel=channel,
         user=user,
@@ -160,6 +207,52 @@ async def handle_not_helpful_feedback(ack, body, client):
     user = body["user"]["id"]
     channel = body["channel"]["id"]
     thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    message_ts = body.get("message", {}).get("ts")
+    
+    # Track the not useful feedback
+    try:
+        sheets_service = GoogleSheetsService()
+        sheets_service.update_feedback_count("not_useful")
+        logger.info(f"Updated not useful feedback count for user {user}")
+    except Exception as e:
+        logger.error(f"Error updating not useful feedback count: {e}")
+    
+    # Update the message to hide useful/not useful buttons but keep "Give Feedback" button
+    try:
+        # Get the original message text from the first block
+        original_blocks = body.get("message", {}).get("blocks", [])
+        message_text = ""
+        if original_blocks and len(original_blocks) > 0:
+            message_text = original_blocks[0].get("text", {}).get("text", "")
+        
+        await client.chat_update(
+            channel=channel,
+            ts=message_ts,
+            text=message_text,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": message_text
+                    }
+                },
+                {
+                    "type": "actions", 
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                            "value": "give_feedback",
+                            "action_id": "feedback_text"
+                        }
+                    ]
+                }
+            ]
+        )
+    except Exception as e:
+        logger.error(f"Error updating message after not helpful feedback: {e}")
+    
     await client.chat_postEphemeral(
         channel=channel,
         user=user,
@@ -243,6 +336,21 @@ async def command(ack, body, respond):
     await ack()
     await respond(f"Hi <@{body['user_id']}>!")
 
+@slack_app.command("/process-feedback")
+async def process_feedback_command(ack, body, respond):
+    """Admin command to process all feedback counts."""
+    await ack()
+    user_id = body['user_id']
+    
+    try:
+        sheets_service = GoogleSheetsService()
+        sheets_service.process_all_feedback_counts()
+        await respond(f"✅ <@{user_id}> Feedback counts have been processed and updated in the 'Feedback Count' sheet!")
+        logger.info(f"Admin user {user_id} processed feedback counts")
+    except Exception as e:
+        logger.error(f"Error processing feedback counts: {e}")
+        await respond(f"❌ <@{user_id}> Error processing feedback counts: {str(e)}")
+
 @app.get("/")
 async def root():
     """Root endpoint."""
@@ -266,6 +374,15 @@ async def get_status():
 if __name__ == "__main__":
     async def main():
         logger.info("Starting Superbank Procurement Assistant in Socket Mode...")
+        
+        # Initialize feedback count sheet on startup
+        try:
+            sheets_service = GoogleSheetsService()
+            sheets_service.process_all_feedback_counts()
+            logger.info("Feedback count sheet initialized successfully")
+        except Exception as e:
+            logger.error(f"Error initializing feedback count sheet: {e}")
+        
         handler = AsyncSocketModeHandler(slack_app, SLACK_APP_TOKEN)
         await handler.start_async()
 
