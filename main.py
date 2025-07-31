@@ -34,6 +34,9 @@ app = FastAPI(title="Superbank Procurement Assistant", version="1.0.0")
 # --- Thread-aware conversation history ---
 thread_histories = {} 
 
+# --- Vote tracking ---
+thread_votes = {}  # Structure: {thread_ts: {user_id: vote_type}}
+
 # Helper to add a message to thread history
 def add_to_thread_history(thread_ts, role, content, max_turns=6):
     if thread_ts not in thread_histories:
@@ -47,6 +50,54 @@ def get_thread_context(thread_ts):
     # Optionally, only use user messages or alternate user/assistant turns
     context = " ".join([turn["content"] for turn in history])
     return context
+
+# Helper functions for vote tracking
+def has_user_voted(thread_ts, user_id):
+    """Check if user has already voted on this thread."""
+    return thread_votes.get(thread_ts, {}).get(user_id) is not None
+
+def record_user_vote(thread_ts, user_id, vote_type):
+    """Record a user's vote for a thread."""
+    if thread_ts not in thread_votes:
+        thread_votes[thread_ts] = {}
+    thread_votes[thread_ts][user_id] = vote_type
+
+def get_updated_blocks_after_vote(original_text, thread_ts):
+    """Generate updated blocks showing vote status and keeping the Give Feedback button."""
+    # Count votes for display
+    votes = thread_votes.get(thread_ts, {})
+    useful_count = sum(1 for vote in votes.values() if vote == "useful")
+    not_useful_count = sum(1 for vote in votes.values() if vote == "not_useful")
+    
+    return [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": original_text
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"👍 {useful_count} helpful • 👎 {not_useful_count} not helpful"
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                    "value": "give_feedback",
+                    "action_id": "feedback_text"
+                }
+            ]
+        }
+    ]
 
 def markdown_to_slack(text):
     """Convert Markdown bold (**bold**) to Slack bold (*bold*), _italic_ to _italic_, and [text](url) to <url|text>."""
@@ -144,26 +195,102 @@ async def handle_mention(event, say, logger):
 @slack_app.action("feedback_helpful")
 async def handle_helpful_feedback(ack, body, client):
     await ack()
-    user = body["user"]["id"]
+    user_id = body["user"]["id"]
     channel = body["channel"]["id"]
-    thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    message = body.get("message", {})
+    thread_ts = message.get("thread_ts") or message.get("ts")
+    message_ts = message.get("ts")
+    
+    # Check if user has already voted
+    if has_user_voted(thread_ts, user_id):
+        await client.chat_postEphemeral(
+            channel=channel,
+            user=user_id,
+            text="You have already voted on this response.",
+            thread_ts=thread_ts
+        )
+        return
+    
+    # Record the vote
+    record_user_vote(thread_ts, user_id, "useful")
+    
+    # Update Google Sheets
+    try:
+        from services.google_sheets_service import GoogleSheetsService
+        sheets_service = GoogleSheetsService()
+        sheets_service.record_vote(thread_ts, user_id, "useful")
+    except Exception as e:
+        logger.error(f"Error recording vote in Google Sheets: {e}")
+    
+    # Update the message to remove buttons and show vote counts
+    original_text = message.get("blocks", [{}])[0].get("text", {}).get("text", "")
+    updated_blocks = get_updated_blocks_after_vote(original_text, thread_ts)
+    
+    try:
+        await client.chat_update(
+            channel=channel,
+            ts=message_ts,
+            text=original_text,
+            blocks=updated_blocks
+        )
+    except Exception as e:
+        logger.error(f"Error updating message: {e}")
+    
     await client.chat_postEphemeral(
         channel=channel,
-        user=user,
-        text="Thanks for your feedback!",
+        user=user_id,
+        text="Thanks for your feedback! 👍",
         thread_ts=thread_ts
     )
 
 @slack_app.action("feedback_not_helpful")
 async def handle_not_helpful_feedback(ack, body, client):
     await ack()
-    user = body["user"]["id"]
+    user_id = body["user"]["id"]
     channel = body["channel"]["id"]
-    thread_ts = body.get("message", {}).get("thread_ts") or body.get("message", {}).get("ts")
+    message = body.get("message", {})
+    thread_ts = message.get("thread_ts") or message.get("ts")
+    message_ts = message.get("ts")
+    
+    # Check if user has already voted
+    if has_user_voted(thread_ts, user_id):
+        await client.chat_postEphemeral(
+            channel=channel,
+            user=user_id,
+            text="You have already voted on this response.",
+            thread_ts=thread_ts
+        )
+        return
+    
+    # Record the vote
+    record_user_vote(thread_ts, user_id, "not_useful")
+    
+    # Update Google Sheets
+    try:
+        from services.google_sheets_service import GoogleSheetsService
+        sheets_service = GoogleSheetsService()
+        sheets_service.record_vote(thread_ts, user_id, "not_useful")
+    except Exception as e:
+        logger.error(f"Error recording vote in Google Sheets: {e}")
+    
+    # Update the message to remove buttons and show vote counts
+    original_text = message.get("blocks", [{}])[0].get("text", {}).get("text", "")
+    updated_blocks = get_updated_blocks_after_vote(original_text, thread_ts)
+    
+    try:
+        await client.chat_update(
+            channel=channel,
+            ts=message_ts,
+            text=original_text,
+            blocks=updated_blocks
+        )
+    except Exception as e:
+        logger.error(f"Error updating message: {e}")
+    
     await client.chat_postEphemeral(
         channel=channel,
-        user=user,
-        text="Sorry to hear that. Your feedback has been noted.",
+        user=user_id,
+        text="Sorry to hear that. Your feedback has been noted. 👎",
         thread_ts=thread_ts
     )
 
