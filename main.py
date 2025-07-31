@@ -63,7 +63,7 @@ def record_user_vote(thread_ts, user_id, vote_type):
     thread_votes[thread_ts][user_id] = vote_type
 
 def get_updated_blocks_after_vote(original_text, thread_ts):
-    """Generate updated blocks showing vote status instead of buttons."""
+    """Generate updated blocks showing vote status and keep Give Feedback button."""
     # Count votes for display
     votes = thread_votes.get(thread_ts, {})
     useful_count = sum(1 for vote in votes.values() if vote == "useful")
@@ -85,18 +85,42 @@ def get_updated_blocks_after_vote(original_text, thread_ts):
                     "text": f"👍 {useful_count} helpful • 👎 {not_useful_count} not helpful"
                 }
             ]
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "💬 Still have any feedbacks?"},
+                    "value": "give_feedback",
+                    "action_id": "feedback_text"
+                }
+            ]
         }
     ]
 
+import re
+
 def markdown_to_slack(text):
-    """Convert Markdown bold (**bold**) to Slack bold (*bold*), _italic_ to _italic_, and [text](url) to <url|text>."""
+    """
+    Convert Markdown to Slack formatting:
+    - **bold** → *bold*
+    - _italic_ → _italic_
+    - [text](url) → <url|text>
+    - ## Heading → *Heading*
+    - # Heading → *Heading*
+    """
+    # Convert ## Heading and # Heading to bold
+    text = re.sub(r'^##\s*(.+)', r'*\1*', text, flags=re.MULTILINE)
+    text = re.sub(r'^#\s*(.+)', r'*\1*', text, flags=re.MULTILINE)
     # Convert **bold** to *bold*
     text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', text)
-    # Convert _italic_ (Markdown) to _italic_ (Slack)
+    # Convert _italic_ to _italic_
     text = re.sub(r'_(.*?)_', r'_\1_', text)
-    # Convert [text](url) to <url|text> for Slack
+    # Convert [text](url) to <url|text>
     text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<\2|\1>', text)
     return text
+
 
 @slack_app.event("app_mention")
 async def handle_mention(event, say, logger):
