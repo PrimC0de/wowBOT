@@ -63,7 +63,7 @@ def record_user_vote(thread_ts, user_id, vote_type):
     thread_votes[thread_ts][user_id] = vote_type
 
 def get_updated_blocks_after_vote(original_text, thread_ts):
-    """Generate updated blocks showing vote status instead of buttons."""
+    """Generate updated blocks showing vote status and keeping the Give Feedback button."""
     # Count votes for display
     votes = thread_votes.get(thread_ts, {})
     useful_count = sum(1 for vote in votes.values() if vote == "useful")
@@ -83,6 +83,17 @@ def get_updated_blocks_after_vote(original_text, thread_ts):
                 {
                     "type": "mrkdwn",
                     "text": f"👍 {useful_count} helpful • 👎 {not_useful_count} not helpful"
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "💬 Give Feedback"},
+                    "value": "give_feedback",
+                    "action_id": "feedback_text"
                 }
             ]
         }
